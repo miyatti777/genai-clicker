@@ -1,0 +1,103 @@
+buildings:
+  gpu:
+    name: "GPU"
+    icon: "🔧"
+    baseCost: 15
+    baseProduction: 0.1
+    description: "基本的なGPUでデプロイを生成"
+  cluster:
+    name: "GPUクラスター"
+    icon: "💻"
+    baseCost: 100
+    baseProduction: 1
+    description: "複数のGPUを組み合わせた高性能システム"
+  datacenter:
+    name: "データセンター"
+    icon: "🏢"
+    baseCost: 1100
+    baseProduction: 8
+    description: "大規模なコンピューティング施設"
+  supercomputer:
+    name: "スーパーコンピュータ"
+    icon: "🖥️"
+    baseCost: 12000
+    baseProduction: 47
+    description: "超高性能な計算機システム"
+  quantumComputer:
+    name: "量子コンピュータ"
+    icon: "⚛️"
+    baseCost: 130000
+    baseProduction: 260
+    description: "量子力学を利用した革新的コンピュータ"
+  aiLab:
+    name: "AI研究所"
+    icon: "🧪"
+    baseCost: 1400000
+    baseProduction: 1400
+    description: "最先端のAI研究開発施設"
+  neuralNetwork:
+    name: "ニューラルファーム"
+    icon: "🧠"
+    baseCost: 20000000
+    baseProduction: 7800
+    description: "大規模なニューラルネットワーク農場"
+  agi:
+    name: "AGI インスタンス"
+    icon: "🌟"
+    baseCost: 330000000
+    baseProduction: 44000
+    description: "汎用人工知能の実体化"
+upgrades:
+  reinforcedClicking:
+    name: "強化クリック"
+    cost: 100
+    description: "クリック力が2倍になる"
+  efficientGPUs:
+    name: "効率的GPU"
+    cost: 500
+    description: "GPU生産量が2倍になる"
+  overclocking:
+    name: "オーバークロック"
+    cost: 10000
+    description: "全施設の生産量が10%向上"
+  parallelProcessing:
+    name: "並列処理"
+    cost: 100000
+    description: "クラスター効率が3倍になる"
+  liquidCooling:
+    name: "液体冷却"
+    cost: 1000000
+    description: "データセンター出力が2倍"
+  quantumEntanglement:
+    name: "量子もつれ"
+    cost: 10000000
+    description: "量子コンピュータが5倍高速"
+achievements:
+  firstClick:
+    name: "初回クリック"
+    description: "AIチップを初めてクリック"
+    icon: "🎯"
+  hundred:
+    name: "100デプロイ"
+    description: "100デプロイを獲得"
+    icon: "💯"
+  firstBuilding:
+    name: "初の建物"
+    description: "最初の建物を購入"
+    icon: "🏗️"
+  clickMaster:
+    name: "クリックマスター"
+    description: "1000回クリック"
+    icon: "👆"
+  millionaire:
+    name: "ミリオネア"
+    description: "1,000,000デプロイを獲得"
+    icon: "💰"
+news:
+  - "速報：新しいGPUアーキテクチャが発表され、AI学習速度が50%向上！"
+  - "研究：量子コンピュータとAIの組み合わせで画期的な進歩"
+  - "ニュース：大手テック企業がAI投資を大幅に拡大"
+  - "発表：新しいニューラルネットワーク手法でデプロイ生成効率が向上"
+  - "業界：AGI開発競争が激化、各社が巨額投資を発表"
+  - "技術：エッジAIの普及により分散コンピューティングが加速"
+  - "報告：AIチップの需要が史上最高レベルに到達"
