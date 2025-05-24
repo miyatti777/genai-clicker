@@ -402,6 +402,46 @@
             background: rgba(0,255,65,0.4);
         }
 
+        .menu-screen,
+        .status-screen {
+            display: none;
+            position: fixed;
+            top: 60px;
+            bottom: 50px;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.95);
+            overflow-y: auto;
+            z-index: 3;
+            padding: 20px;
+        }
+
+        #statusContent {
+            color: #ccc;
+        }
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.95);
+            border-top: 1px solid #333;
+            z-index: 1001;
+            text-align: center;
+        }
+        .mobile-nav-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #00ff41;
+            padding: 10px 0;
+            font-size: 1rem;
+        }
+        .mobile-nav-btn.active {
+            background: rgba(0,255,65,0.2);
+        }
+
         .modal {
             position: fixed;
             top: 0;
@@ -519,46 +559,60 @@
                 grid-template-columns: 1fr;
                 grid-template-rows: 1fr;
             }
-            
+
             .clicker-area {
                 border-right: none;
                 width: 100vw;
+                height: calc(100vh - 110px);
+                margin-top: 60px;
             }
-            
+
             .right-panel {
                 position: fixed;
-                bottom: 0;
-                right: 0;
+                top: 60px;
+                bottom: 50px;
                 left: 0;
-                top: auto;
+                right: 0;
                 width: 100vw;
-                height: 60vh;
-                flex-direction: row;
+                height: calc(100vh - 110px);
+                flex-direction: column;
                 z-index: 3;
             }
-            
+
             .buildings-panel, .upgrades-panel {
-                height: 60vh;
-                width: 50vw;
+                height: 100%;
+                width: 100vw;
                 border-bottom: none;
-                border-right: 1px solid #333;
-            }
-            
-            .upgrades-panel {
                 border-right: none;
+                display: none;
             }
-            
+
             .game-stats {
-                position: fixed;
-                top: 70px;
-                left: 10px;
-                z-index: 1002;
+                display: none;
             }
-            
+
+            .menu-buttons {
+                position: static;
+                margin-top: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
             .ai-chip {
                 width: 250px;
                 height: 250px;
                 font-size: 3rem;
+            }
+
+            .mobile-nav {
+                display: flex;
+            }
+            .mobile-nav-btn {
+                border-right: 1px solid #333;
+            }
+            .mobile-nav-btn:last-child {
+                border-right: none;
             }
         }
     </style>
@@ -582,12 +636,18 @@
         </div>
     </div>
 
-    <div class="menu-buttons">
-        <button class="menu-btn" onclick="showModal('achievementsModal')">🏆 実績</button>
-        <button class="menu-btn" onclick="showModal('statsModal')">📊 統計</button>
-        <button class="menu-btn" onclick="saveGame()">💾 セーブ</button>
-        <button class="menu-btn" onclick="loadGame()">📁 ロード</button>
-        <button class="menu-btn" onclick="resetGame()">🔄 リセット</button>
+    <div class="menu-screen">
+        <div class="menu-buttons">
+            <button class="menu-btn" onclick="showModal('achievementsModal')">🏆 実績</button>
+            <button class="menu-btn" onclick="showModal('statsModal')">📊 統計</button>
+            <button class="menu-btn" onclick="saveGame()">💾 セーブ</button>
+            <button class="menu-btn" onclick="loadGame()">📁 ロード</button>
+            <button class="menu-btn" onclick="resetGame()">🔄 リセット</button>
+        </div>
+    </div>
+
+    <div class="status-screen">
+        <div id="statusContent"></div>
     </div>
 
     <div class="main-game">
@@ -634,6 +694,13 @@
             <div class="panel-title">⚡ アップグレード</div>
             <div id="upgradesContainer"></div>
         </div>
+    </div>
+    <div class="mobile-nav">
+        <button class="mobile-nav-btn" onclick="showMobilePanel('clicker')">🤖 プレイ</button>
+        <button class="mobile-nav-btn" onclick="showMobilePanel('buildings')">🏗️ 施設</button>
+        <button class="mobile-nav-btn" onclick="showMobilePanel('upgrades')">⚡ アップグレード</button>
+        <button class="mobile-nav-btn" onclick="showMobilePanel('menu')">📋 メニュー</button>
+        <button class="mobile-nav-btn" onclick="showMobilePanel('status')">📊 ステータス</button>
     </div>
 
     <div class="news-ticker">
@@ -1138,6 +1205,31 @@
             return (num/1000000000000).toFixed(1) + 'T';
         }
 
+        function showMobilePanel(panel) {
+            if (window.innerWidth > 1200) return;
+            const screens = {
+                clicker: document.querySelector('.clicker-area'),
+                buildings: document.querySelector('.buildings-panel'),
+                upgrades: document.querySelector('.upgrades-panel'),
+                menu: document.querySelector('.menu-screen'),
+                status: document.querySelector('.status-screen')
+            };
+            Object.keys(screens).forEach(key => {
+                if (screens[key]) screens[key].style.display = key === panel ? 'block' : 'none';
+            });
+
+            const buttons = document.querySelectorAll('.mobile-nav-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            const order = ['clicker','buildings','upgrades','menu','status'];
+            const index = order.indexOf(panel);
+            if (index >= 0) buttons[index].classList.add('active');
+
+            if (panel === 'status') {
+                updateStatistics();
+                document.getElementById('statusContent').innerHTML = document.getElementById('statisticsContent').innerHTML;
+            }
+        }
+
         // モーダル表示/非表示
         function showModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
@@ -1218,7 +1310,13 @@
         }
 
         // ゲーム開始
-        document.addEventListener('DOMContentLoaded', async () => { await loadConfig(); initGame(); });
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadConfig();
+            initGame();
+            if (window.innerWidth <= 1200) {
+                showMobilePanel('clicker');
+            }
+        });
 
         // キーボードショートカット
         document.addEventListener('keydown', (e) => {
