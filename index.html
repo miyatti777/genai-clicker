@@ -401,6 +401,28 @@
         .menu-btn:hover {
             background: rgba(0,255,65,0.4);
         }
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.95);
+            border-top: 1px solid #333;
+            z-index: 1001;
+            text-align: center;
+        }
+        .mobile-nav-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #00ff41;
+            padding: 10px 0;
+            font-size: 1rem;
+        }
+        .mobile-nav-btn.active {
+            background: rgba(0,255,65,0.2);
+        }
 
         .modal {
             position: fixed;
@@ -523,11 +545,12 @@
             .clicker-area {
                 border-right: none;
                 width: 100vw;
+                display: none;
             }
             
             .right-panel {
                 position: fixed;
-                bottom: 0;
+                bottom: 50px;
                 right: 0;
                 left: 0;
                 top: auto;
@@ -535,30 +558,40 @@
                 height: 60vh;
                 flex-direction: row;
                 z-index: 3;
+                display: none;
             }
             
             .buildings-panel, .upgrades-panel {
                 height: 60vh;
-                width: 50vw;
+                width: 100vw;
                 border-bottom: none;
-                border-right: 1px solid #333;
-            }
-            
-            .upgrades-panel {
                 border-right: none;
+                display: none;
             }
-            
+            .menu-buttons {
+                display: none;
+            }
             .game-stats {
                 position: fixed;
                 top: 70px;
                 left: 10px;
                 z-index: 1002;
+                display: none;
             }
             
             .ai-chip {
                 width: 250px;
                 height: 250px;
                 font-size: 3rem;
+            }
+            .mobile-nav {
+                display: flex;
+            }
+            .mobile-nav-btn {
+                border-right: 1px solid #333;
+            }
+            .mobile-nav-btn:last-child {
+                border-right: none;
             }
         }
     </style>
@@ -634,6 +667,13 @@
             <div class="panel-title">⚡ アップグレード</div>
             <div id="upgradesContainer"></div>
         </div>
+    </div>
+    <div class="mobile-nav">
+        <button class="mobile-nav-btn" onclick="showMobilePanel('clicker')">🎮 プレイ</button>
+        <button class="mobile-nav-btn" onclick="showMobilePanel('buildings')">🏗️ 施設</button>
+        <button class="mobile-nav-btn" onclick="showMobilePanel('upgrades')">⚡ アップグレード</button>
+        <button class="mobile-nav-btn" onclick="showMobilePanel('menu')">📋 メニュー</button>
+        <button class="mobile-nav-btn" onclick="showMobilePanel('status')">📊 ステータス</button>
     </div>
 
     <div class="news-ticker">
@@ -1138,6 +1178,50 @@
             return (num/1000000000000).toFixed(1) + 'T';
         }
 
+        function showMobilePanel(panel) {
+            if (window.innerWidth > 1200) return;
+            const clicker = document.querySelector('.clicker-area');
+            const rightPanel = document.querySelector('.right-panel');
+            const buildings = document.querySelector('.buildings-panel');
+            const upgrades = document.querySelector('.upgrades-panel');
+            const menu = document.querySelector('.menu-buttons');
+            const status = document.querySelector('.game-stats');
+            const buttons = document.querySelectorAll('.mobile-nav-btn');
+
+            clicker.style.display = 'none';
+            rightPanel.style.display = 'none';
+            buildings.style.display = 'none';
+            upgrades.style.display = 'none';
+            menu.style.display = 'none';
+            status.style.display = 'none';
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            switch (panel) {
+                case 'clicker':
+                    clicker.style.display = 'flex';
+                    buttons[0].classList.add('active');
+                    break;
+                case 'buildings':
+                    rightPanel.style.display = 'flex';
+                    buildings.style.display = 'block';
+                    buttons[1].classList.add('active');
+                    break;
+                case 'upgrades':
+                    rightPanel.style.display = 'flex';
+                    upgrades.style.display = 'block';
+                    buttons[2].classList.add('active');
+                    break;
+                case 'menu':
+                    menu.style.display = 'flex';
+                    buttons[3].classList.add('active');
+                    break;
+                case 'status':
+                    status.style.display = 'block';
+                    buttons[4].classList.add('active');
+                    break;
+            }
+        }
+
         // モーダル表示/非表示
         function showModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
@@ -1218,7 +1302,7 @@
         }
 
         // ゲーム開始
-        document.addEventListener('DOMContentLoaded', async () => { await loadConfig(); initGame(); });
+        document.addEventListener('DOMContentLoaded', async () => { await loadConfig(); initGame(); if (window.innerWidth <= 1200) { showMobilePanel('clicker'); } });
 
         // キーボードショートカット
         document.addEventListener('keydown', (e) => {
