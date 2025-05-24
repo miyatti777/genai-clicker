@@ -401,6 +401,28 @@
         .menu-btn:hover {
             background: rgba(0,255,65,0.4);
         }
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.95);
+            border-top: 1px solid #333;
+            z-index: 1001;
+            text-align: center;
+        }
+        .mobile-nav-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #00ff41;
+            padding: 10px 0;
+            font-size: 1rem;
+        }
+        .mobile-nav-btn.active {
+            background: rgba(0,255,65,0.2);
+        }
 
         .modal {
             position: fixed;
@@ -527,7 +549,7 @@
             
             .right-panel {
                 position: fixed;
-                bottom: 0;
+                bottom: 50px;
                 right: 0;
                 left: 0;
                 top: auto;
@@ -539,13 +561,10 @@
             
             .buildings-panel, .upgrades-panel {
                 height: 60vh;
-                width: 50vw;
+                width: 100vw;
                 border-bottom: none;
-                border-right: 1px solid #333;
-            }
-            
-            .upgrades-panel {
                 border-right: none;
+                display: none;
             }
             
             .game-stats {
@@ -559,6 +578,15 @@
                 width: 250px;
                 height: 250px;
                 font-size: 3rem;
+            }
+            .mobile-nav {
+                display: flex;
+            }
+            .mobile-nav-btn {
+                border-right: 1px solid #333;
+            }
+            .mobile-nav-btn:last-child {
+                border-right: none;
             }
         }
     </style>
@@ -634,6 +662,10 @@
             <div class="panel-title">⚡ アップグレード</div>
             <div id="upgradesContainer"></div>
         </div>
+    </div>
+    <div class="mobile-nav">
+        <button class="mobile-nav-btn" onclick="showMobilePanel('buildings')">🏗️ 施設</button>
+        <button class="mobile-nav-btn" onclick="showMobilePanel('upgrades')">⚡ アップグレード</button>
     </div>
 
     <div class="news-ticker">
@@ -1138,6 +1170,24 @@
             return (num/1000000000000).toFixed(1) + 'T';
         }
 
+        function showMobilePanel(panel) {
+            if (window.innerWidth > 1200) return;
+            const buildings = document.querySelector('.buildings-panel');
+            const upgrades = document.querySelector('.upgrades-panel');
+            const buttons = document.querySelectorAll('.mobile-nav-btn');
+            if (panel === 'buildings') {
+                buildings.style.display = 'block';
+                upgrades.style.display = 'none';
+                buttons[0].classList.add('active');
+                buttons[1].classList.remove('active');
+            } else {
+                buildings.style.display = 'none';
+                upgrades.style.display = 'block';
+                buttons[0].classList.remove('active');
+                buttons[1].classList.add('active');
+            }
+        }
+
         // モーダル表示/非表示
         function showModal(modalId) {
             document.getElementById(modalId).style.display = 'flex';
@@ -1218,7 +1268,7 @@
         }
 
         // ゲーム開始
-        document.addEventListener('DOMContentLoaded', async () => { await loadConfig(); initGame(); });
+        document.addEventListener('DOMContentLoaded', async () => { await loadConfig(); initGame(); if (window.innerWidth <= 1200) { showMobilePanel('buildings'); } });
 
         // キーボードショートカット
         document.addEventListener('keydown', (e) => {
