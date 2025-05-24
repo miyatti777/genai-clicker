@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生成AIクリッカー 🤖</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(45deg, #0a0a23, #1a1a3a);
+            color: #fff;
+            overflow: hidden;
+            user-select: none;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .header {
+            background: rgba(0,0,0,0.8);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00ff41;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            height: 60px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00ff41;
+        }
+
+        .stats {
+            display: flex;
+            gap: 30px;
+            font-size: 1rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ff41;
+        }
+
+        .main-game {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .clicker-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            background: radial-gradient(circle, #1a1a3a, #0a0a23);
+            position: relative;
+            overflow: hidden;
+            border-right: 2px solid #00ff41;
+            height: 100vh;
+            width: 100%;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 400px;
+            position: fixed;
+            right: 0;
+            top: 0;
+            z-index: 2;
+        }
+
+        .buildings-panel {
+            background: rgba(0,0,0,0.95);
+            overflow-y: auto;
+            padding: 20px;
+            height: 50vh;
+            border-bottom: 1px solid #333;
+        }
+
+        .upgrades-panel {
+            background: rgba(0,0,0,0.95);
+            overflow-y: auto;
+            padding: 20px;
+            height: 50vh;
+        }
+
+        .ai-chip {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(45deg, #00ff41, #0080ff) !important;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.5);
+            animation: pulse 2s infinite;
+            position: relative;
+            overflow: hidden;
+            border: 3px solid #fff;
+            z-index: 10;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 50px rgba(0, 255, 65, 0.5); }
+            50% { transform: scale(1.05); box-shadow: 0 0 80px rgba(0, 255, 65, 0.8); }
+        }
+
+        .ai-chip:active {
+            transform: scale(0.95);
+        }
+
+        .ai-chip::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .ai-chip:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 80px rgba(0, 255, 65, 0.8);
+            border-color: #00ff41;
+        }
+
+        .click-effect {
+            position: absolute;
+            color: #00ff41;
+            font-size: 2rem;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-100px); }
+        }
+
+        .tokens-display {
+            margin-top: 30px;
+            text-align: center;
+            z-index: 10;
+            background-color: rgba(0,0,0,0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #00ff41;
+        }
+
+        .tokens-count {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00ff41;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.8);
+        }
+
+        .game-stats {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #00ff41;
+            z-index: 15;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            color: #ccc;
+            min-width: 200px;
+        }
+
+        .stat-value {
+            color: #00ff41;
+            font-weight: bold;
+        }
+
+        .tokens-per-second {
+            font-size: 1.2rem;
+            color: #0080ff;
+            margin-top: 10px;
+        }
+
+        .panel-title {
+            font-size: 1.4rem;
+            color: #00ff41;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #00ff41;
+            padding-bottom: 10px;
+        }
+
+        .building {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .building:hover {
+            background: rgba(0,255,65,0.2);
+            border-color: #00ff41;
+        }
+
+        .building.unaffordable {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .building-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .building-name {
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .building-count {
+            background: #00ff41;
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .building-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .building-price {
+            color: #00ff41;
+            font-weight: bold;
+        }
+
+        .upgrade {
+            background: rgba(0,128,255,0.2);
+            border: 1px solid #0080ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upgrade:hover {
+            background: rgba(0,128,255,0.4);
+        }
+
+        .upgrade.unaffordable {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .upgrade-name {
+            font-weight: bold;
+            color: #0080ff;
+            margin-bottom: 5px;
+        }
+
+        .upgrade-desc {
+            font-size: 0.8rem;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .upgrade-price {
+            color: #00ff41;
+            font-weight: bold;
+        }
+
+        .news-ticker {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.9);
+            border-top: 2px solid #00ff41;
+            padding: 10px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .news-content {
+            white-space: nowrap;
+            animation: scroll 30s linear infinite;
+            color: #00ff41;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .achievements-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            border: 2px solid #00ff41;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 1000;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .achievement-unlocked {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #00ff41, #0080ff);
+            color: #000;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            animation: slideIn 0.5s ease, slideOut 0.5s ease 4s forwards;
+            z-index: 1000;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(400px); opacity: 0; }
+        }
+
+        .menu-buttons {
+            position: fixed;
+            top: 70px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1001;
+            flex-wrap: wrap;
+            max-width: 300px;
+        }
+
+        .menu-btn {
+            background: rgba(0,255,65,0.2);
+            border: 1px solid #00ff41;
+            color: #00ff41;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .menu-btn:hover {
+            background: rgba(0,255,65,0.4);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background: #1a1a3a;
+            border: 2px solid #00ff41;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close-btn {
+            float: right;
+            background: none;
+            border: none;
+            color: #ff4444;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .achievement-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .achievement-item.unlocked {
+            background: rgba(0,255,65,0.2);
+            border: 1px solid #00ff41;
+        }
+
+        .achievement-icon {
+            font-size: 2rem;
+            width: 50px;
+            text-align: center;
+        }
+
+        .golden-token {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            border-radius: 50%;
+            cursor: pointer;
+            animation: float 3s ease-in-out infinite, glow 1s ease-in-out infinite alternate;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #000;
+            font-weight: bold;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+            to { box-shadow: 0 0 40px rgba(255, 215, 0, 1); }
+        }
+
+        .click-instruction {
+            position: absolute;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #00ff41;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+            animation: bounce 2s infinite;
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        .click-arrow {
+            font-size: 2rem;
+            animation: bounce 1s infinite alternate;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            40% {
+                transform: translateX(-50%) translateY(-10px);
+            }
+            60% {
+                transform: translateX(-50%) translateY(-5px);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .main-game {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr;
+            }
+            
+            .clicker-area {
+                border-right: none;
+                width: 100vw;
+            }
+            
+            .right-panel {
+                position: fixed;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                top: auto;
+                width: 100vw;
+                height: 60vh;
+                flex-direction: row;
+                z-index: 3;
+            }
+            
+            .buildings-panel, .upgrades-panel {
+                height: 60vh;
+                width: 50vw;
+                border-bottom: none;
+                border-right: 1px solid #333;
+            }
+            
+            .upgrades-panel {
+                border-right: none;
+            }
+            
+            .game-stats {
+                position: fixed;
+                top: 70px;
+                left: 10px;
+                z-index: 1002;
+            }
+            
+            .ai-chip {
+                width: 250px;
+                height: 250px;
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">🤖 生成AIクリッカー</div>
+        <div class="stats">
+            <div class="stat-item">
+                <div>総デプロイ</div>
+                <div class="stat-value" id="totalTokens">0</div>
+            </div>
+            <div class="stat-item">
+                <div>DPS</div>
+                <div class="stat-value" id="tokensPerSecond">0</div>
+            </div>
+            <div class="stat-item">
+                <div>実績</div>
+                <div class="stat-value" id="achievementsCount">0/5</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="menu-buttons">
+        <button class="menu-btn" onclick="showModal('achievementsModal')">🏆 実績</button>
+        <button class="menu-btn" onclick="showModal('statsModal')">📊 統計</button>
+        <button class="menu-btn" onclick="saveGame()">💾 セーブ</button>
+        <button class="menu-btn" onclick="loadGame()">📁 ロード</button>
+        <button class="menu-btn" onclick="resetGame()">🔄 リセット</button>
+    </div>
+
+    <div class="main-game">
+        <div class="clicker-area">
+            <div class="game-stats">
+                <div class="stat-row">
+                    <span>デプロイ:</span>
+                    <span class="stat-value" id="sideTokens">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>毎秒:</span>
+                    <span class="stat-value" id="sideTPS">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>クリック:</span>
+                    <span class="stat-value" id="sideClicks">0</span>
+                </div>
+            </div>
+            
+            <div class="ai-chip" onclick="clickAI()" id="aiChip" style="display: flex !important; background: linear-gradient(45deg, #00ff41, #0080ff) !important;">
+                🤖
+            </div>
+            
+            <div style="color: #00ff41; text-align: center; margin: 20px 0; font-size: 1.2rem; font-weight: bold;">
+                ↑ ここをクリック！ ↑<br>
+                <span style="font-size: 0.9rem; opacity: 0.8;">スペースキーでもOK</span>
+            </div>
+            
+            <div class="tokens-display">
+                <div class="tokens-count" id="tokensCount">0</div>
+                <div>デプロイ</div>
+                <div class="tokens-per-second">毎秒 <span id="tpsDisplay">0</span> デプロイ</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="buildings-panel">
+            <div class="panel-title">🏗️ AI施設</div>
+            <div id="buildingsContainer"></div>
+        </div>
+
+        <div class="upgrades-panel">
+            <div class="panel-title">⚡ アップグレード</div>
+            <div id="upgradesContainer"></div>
+        </div>
+    </div>
+
+    <div class="news-ticker">
+        <div class="news-content" id="newsContent">
+            生成AIクリッカーへようこそ！AIチップをクリックしてデプロイを生成しましょう！
+        </div>
+    </div>
+
+    <!-- 実績モーダル -->
+    <div class="modal" id="achievementsModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="hideModal('achievementsModal')">✕</button>
+            <h2>🏆 実績一覧</h2>
+            <div id="achievementsList"></div>
+        </div>
+    </div>
+
+    <!-- 統計モーダル -->
+    <div class="modal" id="statsModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="hideModal('statsModal')">✕</button>
+            <h2>📊 統計</h2>
+            <div id="statisticsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // ゲームデータ
+        let gameData = {
+            tokens: 0,
+            totalTokens: 0,
+            tokensPerSecond: 0,
+            clickPower: 1,
+            buildings: {},
+            upgrades: new Set(),
+            achievements: new Set(),
+            totalClicks: 0,
+            startTime: Date.now(),
+            goldenTokensClicked: 0
+        };
+
+        // 建物データ
+        const buildingsData = {
+            gpu: {
+                name: 'GPU',
+                icon: '🔧',
+                baseCost: 15,
+                baseProduction: 0.1,
+                description: '基本的なGPUでデプロイを生成'
+            },
+            cluster: {
+                name: 'GPUクラスター',
+                icon: '💻',
+                baseCost: 100,
+                baseProduction: 1,
+                description: '複数のGPUを組み合わせた高性能システム'
+            },
+            datacenter: {
+                name: 'データセンター',
+                icon: '🏢',
+                baseCost: 1100,
+                baseProduction: 8,
+                description: '大規模なコンピューティング施設'
+            },
+            supercomputer: {
+                name: 'スーパーコンピュータ',
+                icon: '🖥️',
+                baseCost: 12000,
+                baseProduction: 47,
+                description: '超高性能な計算機システム'
+            },
+            quantumComputer: {
+                name: '量子コンピュータ',
+                icon: '⚛️',
+                baseCost: 130000,
+                baseProduction: 260,
+                description: '量子力学を利用した革新的コンピュータ'
+            },
+            aiLab: {
+                name: 'AI研究所',
+                icon: '🧪',
+                baseCost: 1400000,
+                baseProduction: 1400,
+                description: '最先端のAI研究開発施設'
+            },
+            neuralNetwork: {
+                name: 'ニューラルファーム',
+                icon: '🧠',
+                baseCost: 20000000,
+                baseProduction: 7800,
+                description: '大規模なニューラルネットワーク農場'
+            },
+            agi: {
+                name: 'AGI インスタンス',
+                icon: '🌟',
+                baseCost: 330000000,
+                baseProduction: 44000,
+                description: '汎用人工知能の実体化'
+            }
+        };
+
+        // アップグレードデータ
+        const upgradesData = {
+            reinforcedClicking: {
+                name: '強化クリック',
+                cost: 100,
+                description: 'クリック力が2倍になる',
+                effect: () => gameData.clickPower *= 2
+            },
+            efficientGPUs: {
+                name: '効率的GPU',
+                cost: 500,
+                description: 'GPU生産量が2倍になる',
+                effect: () => {}
+            },
+            overclocking: {
+                name: 'オーバークロック',
+                cost: 10000,
+                description: '全施設の生産量が10%向上',
+                effect: () => {}
+            },
+            parallelProcessing: {
+                name: '並列処理',
+                cost: 100000,
+                description: 'クラスター効率が3倍になる',
+                effect: () => {}
+            },
+            liquidCooling: {
+                name: '液体冷却',
+                cost: 1000000,
+                description: 'データセンター出力が2倍',
+                effect: () => {}
+            },
+            quantumEntanglement: {
+                name: '量子もつれ',
+                cost: 10000000,
+                description: '量子コンピュータが5倍高速',
+                effect: () => {}
+            }
+        };
+
+        // 実績データ
+        const achievementsData = {
+            firstClick: {
+                name: '初回クリック',
+                description: 'AIチップを初めてクリック',
+                icon: '🎯',
+                condition: () => gameData.totalClicks >= 1
+            },
+            hundred: {
+                name: '100デプロイ',
+                description: '100デプロイを獲得',
+                icon: '💯',
+                condition: () => gameData.totalTokens >= 100
+            },
+            firstBuilding: {
+                name: '初の建物',
+                description: '最初の建物を購入',
+                icon: '🏗️',
+                condition: () => Object.values(gameData.buildings).some(count => count > 0)
+            },
+            clickMaster: {
+                name: 'クリックマスター',
+                description: '1000回クリック',
+                icon: '👆',
+                condition: () => gameData.totalClicks >= 1000
+            },
+            millionaire: {
+                name: 'ミリオネア',
+                description: '1,000,000デプロイを獲得',
+                icon: '💰',
+                condition: () => gameData.totalTokens >= 1000000
+            }
+        };
+
+        // ニュースデータ
+        const newsMessages = [
+            "速報：新しいGPUアーキテクチャが発表され、AI学習速度が50%向上！",
+            "研究：量子コンピュータとAIの組み合わせで画期的な進歩",
+            "ニュース：大手テック企業がAI投資を大幅に拡大",
+            "発表：新しいニューラルネットワーク手法でデプロイ生成効率が向上",
+            "業界：AGI開発競争が激化、各社が巨額投資を発表",
+            "技術：エッジAIの普及により分散コンピューティングが加速",
+            "報告：AIチップの需要が史上最高レベルに到達"
+        ];
+
+        // 初期化
+        function initGame() {
+            // 建物の初期化
+            Object.keys(buildingsData).forEach(key => {
+                gameData.buildings[key] = 0;
+            });
+            
+            // AIチップの表示確認
+            const aiChip = document.getElementById('aiChip');
+            if (aiChip) {
+                console.log('AIチップが見つかりました:', aiChip);
+                aiChip.style.display = 'flex';
+                aiChip.style.visibility = 'visible';
+                aiChip.style.opacity = '1';
+            } else {
+                console.error('AIチップが見つかりません!');
+            }
+            
+            updateDisplay();
+            renderBuildings();
+            renderUpgrades();
+            renderAchievements();
+            
+            // ゲームループ開始
+            setInterval(gameLoop, 100);
+            setInterval(updateNews, 15000);
+            setInterval(maybeSpawnGoldenToken, 30000);
+            
+            // 保存されたデータをロード（初期化後）
+            const saved = localStorage.getItem('aiClickerSave');
+            if (saved) {
+                try {
+                    const loadedData = JSON.parse(saved);
+                    gameData = {
+                        ...loadedData,
+                        upgrades: new Set(loadedData.upgrades || []),
+                        achievements: new Set(loadedData.achievements || [])
+                    };
+                    updateDisplay();
+                    renderBuildings();
+                    renderUpgrades();
+                    renderAchievements();
+                    console.log('セーブデータをロードしました');
+                } catch (e) {
+                    console.log('セーブデータの読み込みに失敗しました:', e);
+                }
+            }
+        }
+
+        // メインゲームループ
+        function gameLoop() {
+            // トークン生産
+            const production = calculateTokensPerSecond();
+            gameData.tokens += production / 10; // 100ms間隔なので10分の1
+            gameData.totalTokens += production / 10;
+            gameData.tokensPerSecond = production;
+            
+            updateDisplay();
+            checkAchievements();
+            updateBuildingAffordability();
+            updateUpgradeAffordability();
+            
+            // 自動保存
+            if (Math.random() < 0.001) { // 0.1%の確率で自動保存
+                saveGame();
+            }
+        }
+
+        // AIチップクリック
+        function clickAI() {
+            console.log('AIチップがクリックされました!');
+            const tokensGained = gameData.clickPower;
+            gameData.tokens += tokensGained;
+            gameData.totalTokens += tokensGained;
+            gameData.totalClicks++;
+            
+            // クリックエフェクト
+            showClickEffect(tokensGained);
+            
+            // AIチップにクリックアニメーション
+            const aiChip = document.getElementById('aiChip');
+            if (aiChip) {
+                aiChip.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    aiChip.style.transform = 'scale(1)';
+                }, 100);
+            }
+            
+            updateDisplay();
+            checkAchievements();
+        }
+
+        // クリックエフェクト表示
+        function showClickEffect(amount) {
+            const effect = document.createElement('div');
+            effect.className = 'click-effect';
+            effect.textContent = `+${formatNumber(amount)}`;
+            effect.style.position = 'absolute';
+            effect.style.left = (Math.random() * 200 + 100) + 'px';
+            effect.style.top = (Math.random() * 100 + 200) + 'px';
+            effect.style.color = '#00ff41';
+            effect.style.fontSize = '2rem';
+            effect.style.fontWeight = 'bold';
+            effect.style.pointerEvents = 'none';
+            effect.style.zIndex = '100';
+            effect.style.animation = 'floatUp 1s ease-out forwards';
+            
+            document.querySelector('.clicker-area').appendChild(effect);
+            
+            setTimeout(() => {
+                if (effect.parentNode) {
+                    effect.remove();
+                }
+            }, 1000);
+        }
+
+        // トークン/秒計算
+        function calculateTokensPerSecond() {
+            let total = 0;
+            Object.keys(buildingsData).forEach(key => {
+                const building = buildingsData[key];
+                const count = gameData.buildings[key] || 0;
+                let production = building.baseProduction * count;
+                
+                // アップグレード効果を適用
+                if (gameData.upgrades.has('efficientGPUs') && key === 'gpu') {
+                    production *= 2;
+                }
+                if (gameData.upgrades.has('parallelProcessing') && key === 'cluster') {
+                    production *= 3;
+                }
+                if (gameData.upgrades.has('liquidCooling') && key === 'datacenter') {
+                    production *= 2;
+                }
+                if (gameData.upgrades.has('quantumEntanglement') && key === 'quantumComputer') {
+                    production *= 5;
+                }
+                if (gameData.upgrades.has('overclocking')) {
+                    production *= 1.1;
+                }
+                
+                total += production;
+                
+                // デバッグ情報（建物がある場合のみ）
+                if (count > 0) {
+                    console.log(`${key}: ${count}個 × ${building.baseProduction} = ${production}/秒`);
+                }
+            });
+            
+            if (total > 0) {
+                console.log(`総DPS: ${total}`);
+            }
+            
+            return total;
+        }
+
+        // 建物価格計算
+        function getBuildingCost(buildingKey) {
+            const building = buildingsData[buildingKey];
+            const count = gameData.buildings[buildingKey] || 0;
+            return Math.floor(building.baseCost * Math.pow(1.15, count));
+        }
+
+        // 建物購入
+        function buyBuilding(buildingKey) {
+            const cost = getBuildingCost(buildingKey);
+            if (gameData.tokens >= cost) {
+                gameData.tokens -= cost;
+                gameData.buildings[buildingKey] = (gameData.buildings[buildingKey] || 0) + 1;
+                renderBuildings();
+                updateDisplay();
+                checkAchievements();
+            }
+        }
+
+        // アップグレード購入
+        function buyUpgrade(upgradeKey) {
+            const upgrade = upgradesData[upgradeKey];
+            if (gameData.tokens >= upgrade.cost && !gameData.upgrades.has(upgradeKey)) {
+                gameData.tokens -= upgrade.cost;
+                gameData.upgrades.add(upgradeKey);
+                upgrade.effect();
+                renderUpgrades();
+                updateDisplay();
+                checkAchievements();
+            }
+        }
+
+        // 建物レンダリング
+        function renderBuildings() {
+            const container = document.getElementById('buildingsContainer');
+            container.innerHTML = '';
+            
+            Object.keys(buildingsData).forEach(key => {
+                const building = buildingsData[key];
+                const count = gameData.buildings[key] || 0;
+                const cost = getBuildingCost(key);
+                const canAfford = gameData.tokens >= cost;
+                
+                const buildingElement = document.createElement('div');
+                buildingElement.className = `building ${canAfford ? '' : 'unaffordable'}`;
+                buildingElement.onclick = () => buyBuilding(key);
+                
+                buildingElement.innerHTML = `
+                    <div class="building-header">
+                        <span class="building-name">${building.icon} ${building.name}</span>
+                        <span class="building-count">${count}</span>
+                    </div>
+                    <div class="building-info">
+                        <span>${building.description}</span>
+                        <span class="building-price">${formatNumber(cost)}</span>
+                    </div>
+                `;
+                
+                container.appendChild(buildingElement);
+            });
+        }
+
+        // アップグレードレンダリング
+        function renderUpgrades() {
+            const container = document.getElementById('upgradesContainer');
+            container.innerHTML = '';
+            
+            Object.keys(upgradesData).forEach(key => {
+                if (gameData.upgrades.has(key)) return; // 既に購入済み
+                
+                const upgrade = upgradesData[key];
+                const canAfford = gameData.tokens >= upgrade.cost;
+                
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = `upgrade ${canAfford ? '' : 'unaffordable'}`;
+                upgradeElement.onclick = () => buyUpgrade(key);
+                
+                upgradeElement.innerHTML = `
+                    <div class="upgrade-name">${upgrade.name}</div>
+                    <div class="upgrade-desc">${upgrade.description}</div>
+                    <div class="upgrade-price">${formatNumber(upgrade.cost)} デプロイ</div>
+                `;
+                
+                container.appendChild(upgradeElement);
+            });
+        }
+
+        // 実績レンダリング
+        function renderAchievements() {
+            const container = document.getElementById('achievementsList');
+            container.innerHTML = '';
+            
+            Object.keys(achievementsData).forEach(key => {
+                const achievement = achievementsData[key];
+                const unlocked = gameData.achievements.has(key);
+                
+                const achievementElement = document.createElement('div');
+                achievementElement.className = `achievement-item ${unlocked ? 'unlocked' : ''}`;
+                
+                achievementElement.innerHTML = `
+                    <div class="achievement-icon">${achievement.icon}</div>
+                    <div>
+                        <div style="font-weight: bold;">${achievement.name}</div>
+                        <div style="color: #ccc; font-size: 0.9rem;">${achievement.description}</div>
+                    </div>
+                `;
+                
+                container.appendChild(achievementElement);
+            });
+        }
+
+        // 実績チェック
+        function checkAchievements() {
+            Object.keys(achievementsData).forEach(key => {
+                if (!gameData.achievements.has(key)) {
+                    const achievement = achievementsData[key];
+                    if (achievement.condition()) {
+                        gameData.achievements.add(key);
+                        showAchievementNotification(achievement);
+                        renderAchievements();
+                    }
+                }
+            });
+        }
+
+        // 実績通知表示
+        function showAchievementNotification(achievement) {
+            const notification = document.createElement('div');
+            notification.className = 'achievement-unlocked';
+            notification.innerHTML = `${achievement.icon} 実績解除: ${achievement.name}`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // ゴールデントークン生成
+        function maybeSpawnGoldenToken() {
+            if (Math.random() < 0.1) { // 10%の確率
+                spawnGoldenToken();
+            }
+        }
+
+        function spawnGoldenToken() {
+            const token = document.createElement('div');
+            token.className = 'golden-token';
+            token.innerHTML = '⭐';
+            token.style.left = Math.random() * (window.innerWidth - 60) + 'px';
+            token.style.top = Math.random() * (window.innerHeight - 60) + 'px';
+            
+            token.onclick = () => {
+                const bonus = gameData.tokensPerSecond * 77; // 77秒分のボーナス
+                gameData.tokens += bonus;
+                gameData.totalTokens += bonus;
+                gameData.goldenTokensClicked++;
+                
+                showClickEffect(bonus);
+                token.remove();
+                updateDisplay();
+                
+                console.log(`ゴールデンデプロイをクリック！ +${formatNumber(bonus)} デプロイ獲得`);
+            };
+            
+            document.body.appendChild(token);
+            
+            // 13秒後に自動消滅
+            setTimeout(() => {
+                if (token.parentNode) {
+                    token.remove();
+                }
+            }, 13000);
+        }
+
+        // ニュース更新
+        function updateNews() {
+            const newsElement = document.getElementById('newsContent');
+            const randomNews = newsMessages[Math.floor(Math.random() * newsMessages.length)];
+            newsElement.textContent = randomNews;
+        }
+
+        // 表示更新
+        function updateDisplay() {
+            document.getElementById('tokensCount').textContent = formatNumber(gameData.tokens);
+            document.getElementById('totalTokens').textContent = formatNumber(gameData.totalTokens);
+            document.getElementById('tokensPerSecond').textContent = formatNumber(gameData.tokensPerSecond);
+            document.getElementById('tpsDisplay').textContent = formatNumber(gameData.tokensPerSecond);
+            document.getElementById('achievementsCount').textContent = 
+                `${gameData.achievements.size}/${Object.keys(achievementsData).length}`;
+            
+            // サイド統計の更新
+            document.getElementById('sideTokens').textContent = formatNumber(gameData.tokens);
+            document.getElementById('sideTPS').textContent = formatNumber(gameData.tokensPerSecond);
+            document.getElementById('sideClicks').textContent = formatNumber(gameData.totalClicks);
+        }
+
+        // 建物の購入可能性更新
+        function updateBuildingAffordability() {
+            const buildings = document.querySelectorAll('.building');
+            buildings.forEach((building, index) => {
+                const key = Object.keys(buildingsData)[index];
+                const cost = getBuildingCost(key);
+                const canAfford = gameData.tokens >= cost;
+                
+                if (canAfford) {
+                    building.classList.remove('unaffordable');
+                } else {
+                    building.classList.add('unaffordable');
+                }
+            });
+        }
+
+        // アップグレードの購入可能性更新
+        function updateUpgradeAffordability() {
+            const upgrades = document.querySelectorAll('.upgrade');
+            upgrades.forEach(upgrade => {
+                // 実装は renderUpgrades で行われる
+            });
+        }
+
+        // 数値フォーマット
+        function formatNumber(num) {
+            if (num < 1000) return Math.floor(num).toString();
+            if (num < 1000000) return (num/1000).toFixed(1) + 'K';
+            if (num < 1000000000) return (num/1000000).toFixed(1) + 'M';
+            if (num < 1000000000000) return (num/1000000000).toFixed(1) + 'B';
+            return (num/1000000000000).toFixed(1) + 'T';
+        }
+
+        // モーダル表示/非表示
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+            if (modalId === 'achievementsModal') {
+                renderAchievements();
+            } else if (modalId === 'statsModal') {
+                updateStatistics();
+            }
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // 統計更新
+        function updateStatistics() {
+            const playTime = Math.floor((Date.now() - gameData.startTime) / 1000 / 60);
+            const avgTPS = gameData.totalTokens / Math.max(playTime * 60, 1);
+            
+            document.getElementById('statisticsContent').innerHTML = `
+                <div style="margin-bottom: 15px;">
+                    <strong>プレイ時間:</strong> ${playTime} 分
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>総クリック数:</strong> ${formatNumber(gameData.totalClicks)}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>総デプロイ生産:</strong> ${formatNumber(gameData.totalTokens)}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>平均DPS:</strong> ${formatNumber(avgTPS)}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>ゴールデンデプロイ:</strong> ${gameData.goldenTokensClicked}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>建物総数:</strong> ${Object.values(gameData.buildings).reduce((a, b) => a + b, 0)}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong>購入済みアップグレード:</strong> ${gameData.upgrades.size}
+                </div>
+            `;
+        }
+
+        // セーブ/ロード
+        function saveGame() {
+            localStorage.setItem('aiClickerSave', JSON.stringify(gameData));
+            alert('ゲームをセーブしました！');
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('aiClickerSave');
+            if (saved) {
+                try {
+                    const loadedData = JSON.parse(saved);
+                    // Set型の復元
+                    gameData = {
+                        ...loadedData,
+                        upgrades: new Set(loadedData.upgrades),
+                        achievements: new Set(loadedData.achievements)
+                    };
+                    updateDisplay();
+                    renderBuildings();
+                    renderUpgrades();
+                    renderAchievements();
+                    alert('ゲームをロードしました！');
+                } catch (e) {
+                    alert('セーブデータの読み込みに失敗しました。');
+                }
+            }
+        }
+
+        function resetGame() {
+            if (confirm('本当にゲームをリセットしますか？すべての進歩が失われます。')) {
+                localStorage.removeItem('aiClickerSave');
+                location.reload();
+            }
+        }
+
+        // ゲーム開始
+        document.addEventListener('DOMContentLoaded', initGame);
+
+        // キーボードショートカット
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                clickAI();
+            }
+        });
+    </script>
+</body>
+</html> 
